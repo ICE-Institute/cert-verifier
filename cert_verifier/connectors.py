@@ -12,13 +12,10 @@ from cert_verifier import IssuerInfo, IssuerKey
 from cert_verifier import TransactionData
 from cert_verifier.errors import *
 
-from dotenv import load_dotenv
-load_dotenv()
-API_KEY=os.environ.get("API_KEY")
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36',
-    "Authorization": API_KEY
+    "Authorization": "Bearer u0kx338qr6-Q2/MX442ctJlPUv6oxA5xuFKGB+sCQ7ETvU1rRtNXug="
 }
 
 

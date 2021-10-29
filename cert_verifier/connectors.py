@@ -12,11 +12,14 @@ from cert_verifier import IssuerInfo, IssuerKey
 from cert_verifier import TransactionData
 from cert_verifier.errors import *
 
+
 headers = {
-    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36',
+    "Authorization": "Bearer u0kx338qr6-Q2/MX442ctJlPUv6oxA5xuFKGB+sCQ7ETvU1rRtNXug="
+}
 
 
-def createTransactionLookupConnector(chain=Chain.bitcoin_mainnet, options=None):
+def createTransactionLookupConnector(chain=Chain.ethereum_mainnet, options=None):
     """
     :param chain: which chain, supported values are testnet and mainnet
     :return: connector for looking up transactions
@@ -164,34 +167,42 @@ class EtherscanConnector(TransactionLookupConnector):
 
     def __init__(self, chain, api_key):
         if chain == Chain.ethereum_mainnet:
-            url_prefix = 'https://api.etherscan.io'
+            #url_prefix = 'https://api.etherscan.io'
+            url_prefix = 'https://console-ko.kaleido.io/api/v1/ledger/k0x6srlto8/k0zsrefonj'
         elif chain == Chain.ethereum_ropsten:
             url_prefix = 'https://ropsten.etherscan.io'
         else:
             raise Exception(
                 'unsupported chain (%s) requested with Etherscan collector. Currently only mainnet and ropsten are supported' % chain)
 
-        self.url = url_prefix + '/api?module=proxy&action=eth_getTransactionByHash&apikey=' + api_key + '&txhash=%s'
-        self.timestamp_url = url_prefix + '/api?module=block&action=getblockreward&apikey=' + api_key + '&blockno=%s'
+        #self.url = url_prefix + '/api?module=proxy&action=eth_getTransactionByHash&apikey=' + api_key + '&txhash=%s'
+        self.url = url_prefix + '/transactions/%s'
+        #self.timestamp_url = url_prefix + '/api?module=block&action=getblockreward&apikey=' + api_key + '&blockno=%s'
+        self.timestamp_url = url_prefix + '/blocks/%s'
 
     def parse_tx(self, json_response):
         # https://api.etherscan.io/
-        signing_key = json_response['result']['from']
-        script = json_response['result']['input']
-        block_no = json_response['result']['blockNumber']
+        #signing_key = json_response['result']['from']
+        signing_key = json_response['from']
+        #script = json_response['result']['input']
+        script = json_response['inputBytes']
+        #block_no = json_response['result']['blockNumber']
+        block_no = json_response['blockNumber']
         if not script:
             logging.error('transaction response is missing input: %s', json_response)
             raise InvalidTransactionError('transaction response is missing input')
         if not block_no:
             logging.error('transaction is not yet confirmed: %s', json_response)
             raise InvalidTransactionError('transaction is not yet confirmed')
-        ts_url = self.timestamp_url % str(int(block_no, 16))
-        r = requests.get(ts_url, headers=headers)
-        if r.status_code != 200:
-            logging.error('Error looking up block timestamp with url=%s, status_code=%d', ts_url, r.status_code)
-            raise InvalidTransactionError('error looking up block timestamp=%s' % block_no)
-        date_time = r.json()['result']['timeStamp']
-        return TransactionData(signing_key, script, date_time_utc=int(date_time), revoked_addresses=None)
+        #ts_url = self.timestamp_url % str(int(str(block_no), 16))
+        #ts_url = self.timestamp_url % str(block_no)
+        #r = requests.get(ts_url, headers=headers)
+        #if r.status_code != 200:
+        #    logging.error('Error looking up block timestamp with url=%s, status_code=%d', ts_url, r.status_code)
+        #    raise InvalidTransactionError('error looking up block timestamp=%s' % block_no)
+        #date_time = r.json()['result']['timestamp']
+        date_time = json_response['timestamp']
+        return TransactionData(signing_key, script, date_time, revoked_addresses=None)
 
 
 def get_field_or_default(data, field_name):

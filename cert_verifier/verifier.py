@@ -42,6 +42,10 @@ def verify_certificate_file(certificate_file_name, transaction_id=None, options=
     with open(certificate_file_name, 'rb') as cert_fp:
         certificate_bytes = cert_fp.read()
         certificate_json = json.loads(certificate_bytes.decode('utf-8'))
+
+        #added transaction_id
+
+
         certificate_model = to_certificate_model(certificate_json=certificate_json,
                                                        txid=transaction_id,
                                                        certificate_bytes=certificate_bytes)
